@@ -1,5 +1,3 @@
-using System;
-
 namespace MeowMix.Web.Models
 {
     public class ErrorViewModel

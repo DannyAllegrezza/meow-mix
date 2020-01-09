@@ -1,6 +1,6 @@
 ﻿namespace MeowMix.Core
 {
-    public class Class1
+    class Event
     {
     }
 }
