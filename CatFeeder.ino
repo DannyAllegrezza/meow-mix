@@ -1,3 +1,4 @@
+#include <PubSubClient.h>
 #include <Stepper.h>
 
 const int stepsPerRevolution = 200;                    // change this to fit the number of steps per revolution
@@ -9,7 +10,11 @@ void setup()
   // set the speed at 100 rpm:
   myStepper.setSpeed(100);
   Serial.begin(115200);
-  feed();
+
+  for (int i = 0; i < 3; i++)
+  {
+    feed();
+  }
 }
 
 void loop()
