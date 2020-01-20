@@ -5,23 +5,48 @@
 
 const int stepsPerRevolution = 200;                    // change this to fit the number of steps per revolution
 Stepper myStepper(stepsPerRevolution, D1, D2, D5, D6); // initialize the stepper motor on preferred pins of ESP8266
-MessageBrokerConfig config = {"", "", ""};
+MessageBrokerConfig config = {"ssid", "password", "broker.mqtt-dashboard.com", 1883};
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+long lastMsg = 0;
+char msg[50];
+int value = 0;
 
 void setup()
 {
+  pinMode(BUILTIN_LED, OUTPUT); // Initialize the BUILTIN_LED pin as an output
   Serial.begin(115200);
+
   myStepper.setSpeed(100);
 
   setupWifi(config);
 
-  for (int i = 0; i < 3; i++)
-  {
-    feed();
-  }
+  client.setServer(config.mqtt_server, config.port);
+  client.setCallback(callback);
 }
 
 void loop()
 {
+  // block main loop until we're reconnected
+  if (!client.connected())
+  {
+    reconnect();
+  }
+
+  client.loop();
+
+  long now = millis();
+  if (now - lastMsg > 2000)
+  {
+    // 2 seconds have passed, publish a new Message
+    lastMsg = now;
+    ++value;
+    snprintf(msg, 50, "hello world #%ld", value);
+    Serial.print("Publish message: ");
+    Serial.println(msg);
+    client.publish("outTopic/loop", msg);
+  }
 }
 
 void feed()
@@ -66,4 +91,58 @@ void setupWifi(MessageBrokerConfig config)
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+}
+
+void callback(char *topic, byte *payload, unsigned int length)
+{
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i = 0; i < length; i++)
+  {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+
+  // Switch on the LED if an 1 was received as first character
+  if ((char)payload[0] == '1')
+  {
+    digitalWrite(BUILTIN_LED, LOW); // Turn the LED on (Note that LOW is the voltage level
+    // but actually the LED is on; this is because
+    // it is active low on the ESP-01)
+    feed();
+  }
+  else
+  {
+    digitalWrite(BUILTIN_LED, HIGH); // Turn the LED off by making the voltage HIGH
+  }
+}
+
+void reconnect()
+{
+  // Loop until we're reconnected
+  while (!client.connected())
+  {
+    Serial.print("Attempting MQTT connection...");
+    // Create a random client ID
+    String clientId = "ESP8266Client-";
+    clientId += String(random(0xffff), HEX);
+    // Attempt to connect
+    if (client.connect(clientId.c_str()))
+    {
+      Serial.println("connected");
+      // Once connected, publish an announcement...
+      client.publish("outTopic/petfeeder", "hello world - esp8266 petfeeder");
+      // ... and resubscribe
+      client.subscribe("inTopic/petfeeder");
+    }
+    else
+    {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
 }
