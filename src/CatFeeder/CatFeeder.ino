@@ -1,16 +1,18 @@
-#include <CatFeeder.h>
+#include "CatFeederCommon.h"
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Stepper.h>
 
 const int stepsPerRevolution = 200;                    // change this to fit the number of steps per revolution
 Stepper myStepper(stepsPerRevolution, D1, D2, D5, D6); // initialize the stepper motor on preferred pins of ESP8266
+MessageBrokerConfig config = {"", "", ""};
 
 void setup()
 {
-  // set the speed at 100 rpm:
-  myStepper.setSpeed(100);
   Serial.begin(115200);
+  myStepper.setSpeed(100);
+
+  setupWifi(config);
 
   for (int i = 0; i < 3; i++)
   {
@@ -40,4 +42,28 @@ void feed()
   digitalWrite(D6, LOW);
 
   delay(5000);
+}
+
+void setupWifi(MessageBrokerConfig config)
+{
+  delay(10);
+  // We start by connecting to a WiFi network
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(config.ssid);
+
+  WiFi.begin(config.ssid, config.password);
+
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+
+  randomSeed(micros());
+
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
 }
