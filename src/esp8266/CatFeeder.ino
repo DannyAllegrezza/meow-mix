@@ -1,3 +1,5 @@
+#include <CatFeeder.h>
+#include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <Stepper.h>
 
@@ -6,7 +8,6 @@ Stepper myStepper(stepsPerRevolution, D1, D2, D5, D6); // initialize the stepper
 
 void setup()
 {
-
   // set the speed at 100 rpm:
   myStepper.setSpeed(100);
   Serial.begin(115200);
