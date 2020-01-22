@@ -3,12 +3,16 @@
 #include <PubSubClient.h>
 #include <Stepper.h>
 
+static const char *IN_TOPIC = "inTopic/petfeeder/feed";
+static const char *OUT_TOPIC = "outTopic/petfeeder";
+
 const int stepsPerRevolution = 200;                    // change this to fit the number of steps per revolution
 Stepper myStepper(stepsPerRevolution, D1, D2, D5, D6); // initialize the stepper motor on preferred pins of ESP8266
 MessageBrokerConfig config = {"ssid", "password", "broker.mqtt-dashboard.com", 1883};
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+
 long lastMsg = 0;
 char msg[50];
 int value = 0;
@@ -45,18 +49,13 @@ void loop()
     snprintf(msg, 50, "hello world #%ld", value);
     Serial.print("Publish message: ");
     Serial.println(msg);
-    client.publish("outTopic/loop", msg);
+    client.publish(OUT_TOPIC, msg);
   }
 }
 
 void feed()
 {
   Serial.println("feeding!");
-  // danny: for debugging purposes, was just verifying that I could use the const values for the digitalWrite calls below..
-  Serial.println(D1);
-  Serial.println(D2);
-  Serial.println(D5);
-  Serial.println(D6);
 
   // step one revolution - in one direction:
   myStepper.step(stepsPerRevolution);
@@ -98,6 +97,7 @@ void callback(char *topic, byte *payload, unsigned int length)
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
+
   for (int i = 0; i < length; i++)
   {
     Serial.print((char)payload[i]);
@@ -107,14 +107,12 @@ void callback(char *topic, byte *payload, unsigned int length)
   // Switch on the LED if an 1 was received as first character
   if ((char)payload[0] == '1')
   {
-    digitalWrite(BUILTIN_LED, LOW); // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because
-    // it is active low on the ESP-01)
+    digitalWrite(BUILTIN_LED, LOW); // Turn the LED on
     feed();
   }
   else
   {
-    digitalWrite(BUILTIN_LED, HIGH); // Turn the LED off by making the voltage HIGH
+    digitalWrite(BUILTIN_LED, HIGH); // Turn the LED off
   }
 }
 
@@ -132,9 +130,9 @@ void reconnect()
     {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("outTopic/petfeeder", "hello world - esp8266 petfeeder");
+      client.publish(OUT_TOPIC, "hello world - esp8266 petfeeder");
       // ... and resubscribe
-      client.subscribe("inTopic/petfeeder");
+      client.subscribe(IN_TOPIC);
     }
     else
     {
