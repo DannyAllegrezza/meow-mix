@@ -1,5 +1,10 @@
 # meow-mix
-An API driven dashboard for my ESP8266 based automatic pet feeder project.
+An API driven dashboard for my ESP8266 based automatic pet feeder project. 
+
+The parts list is listed here:
+1. Cereal dispenser - amazon $14.00
+2. ESP8266 microcontroller- amazon $5.00
+3. Stepper motor - amazon $25.00
 
 ## Getting the ESP8266 configured 
 1. Add the PubSubClient to your sketch. The controller needs a library for communication with the MQTT broker. Check out [PubSubClient](https://github.com/knolleary/pubsubclient/releases/tag/v2.7) for more info. This can be accomplished by downloading the library and placing it into your OS's global Arduino library directory. On Win10, this was `Documents\Arduino\libraries\PubSubClient`. Can also be automatically installed when using VSCode by using the `Library Manager` command.
