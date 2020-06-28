@@ -8,7 +8,7 @@ static const char *OUT_TOPIC = "outTopic/petfeeder";
 
 const int stepsPerRevolution = 200;                    // change this to fit the number of steps per revolution
 Stepper myStepper(stepsPerRevolution, D1, D2, D5, D6); // initialize the stepper motor on preferred pins of ESP8266
-MessageBrokerConfig config = {"ssid", "password", "broker.mqtt-dashboard.com", 1883};
+MessageBrokerConfig config = {ssid, password, mqtt_server, 1883};
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -35,11 +35,13 @@ void loop()
   // block main loop until we're reconnected
   if (!client.connected())
   {
+    Serial.print("Client was not connected, calling reconnect()....");
     reconnect();
   }
 
   client.loop();
-
+  /** 
+   *  Uncomment to publish a message every 2 seconds
   long now = millis();
   if (now - lastMsg > 2000)
   {
@@ -51,9 +53,10 @@ void loop()
     Serial.println(msg);
     client.publish(OUT_TOPIC, msg);
   }
+  **/
 }
 
-void feed()
+void feed(int stepsPerRevolution)
 {
   Serial.println("feeding!");
 
@@ -64,7 +67,9 @@ void feed()
   digitalWrite(D2, LOW);
   digitalWrite(D5, LOW);
   digitalWrite(D6, LOW);
-
+  
+  client.publish(OUT_TOPIC, "Just fed Kneesox :D");
+  
   delay(5000);
 }
 
@@ -108,7 +113,12 @@ void callback(char *topic, byte *payload, unsigned int length)
   if ((char)payload[0] == '1')
   {
     digitalWrite(BUILTIN_LED, LOW); // Turn the LED on
-    feed();
+    feed(stepsPerRevolution);
+  }
+  else if ((char)payload[0] == '2')
+  {
+    digitalWrite(BUILTIN_LED, LOW); // Turn the LED on
+    feed(500);
   }
   else
   {
@@ -128,7 +138,8 @@ void reconnect()
     // Attempt to connect
     if (client.connect(clientId.c_str()))
     {
-      Serial.println("connected");
+      Serial.println("connected!");
+      Serial.println("publishing first message to the OUT_TOPIC");
       // Once connected, publish an announcement...
       client.publish(OUT_TOPIC, "hello world - esp8266 petfeeder");
       // ... and resubscribe
