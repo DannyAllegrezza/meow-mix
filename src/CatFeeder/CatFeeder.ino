@@ -53,26 +53,29 @@ void loop()
   }
   else 
   {
-    Serial.println("client is connected");
-    Serial.println(client.state());  
+    //Serial.println("client is connected");
+    //Serial.println(client.state());  
   }
 
-  Serial.println(client.loop());
+  client.loop();
   
   /** 
    *  Uncomment to publish a message every 2 seconds
+   *  
+
   long now = millis();
+  
   if (now - lastMsg > 2000)
   {
     // 2 seconds have passed, publish a new Message
     lastMsg = now;
     ++value;
-    snprintf(msg, 50, "hello world #%ld", value);
+    snprintf(msg, 50, "!!hello world #%ld", value);
     Serial.print("Publish message: ");
     Serial.println(msg);
     client.publish(OUT_TOPIC, msg);
   }
-  **/
+  */
 }
 
 void feed(int stepsPerRevolution)
